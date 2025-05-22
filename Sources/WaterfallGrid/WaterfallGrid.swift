@@ -23,24 +23,22 @@ public struct WaterfallGrid<Data, ID, Content>: View where Data : RandomAccessCo
     @State private var alignmentGuides = [AnyHashable: CGPoint]() {
         didSet { loaded = !oldValue.isEmpty }
     }
-    
+
     public var body: some View {
-        VStack {
-            GeometryReader { geometry in
-                self.grid(in: geometry)
-                    .onPreferenceChange(ElementPreferenceKey.self, perform: { preferences in
-                        DispatchQueue.global(qos: .userInteractive).async {
-                            let (alignmentGuides, gridHeight) = self.alignmentsAndGridHeight(columns: self.style.columns,
-                                                                                             spacing: self.style.spacing,
-                                                                                             scrollDirection: self.scrollOptions.direction,
-                                                                                             preferences: preferences)
-                            DispatchQueue.main.async {
-                                self.alignmentGuides = alignmentGuides
-                                self.gridHeight = gridHeight
-                            }
+        GeometryReader { geometry in
+            self.grid(in: geometry)
+                .onPreferenceChange(ElementPreferenceKey.self, perform: { preferences in
+                    DispatchQueue.global(qos: .userInteractive).async {
+                        let (alignmentGuides, gridHeight) = self.alignmentsAndGridHeight(columns: self.style.columns,
+                                                                                         spacing: self.style.spacing,
+                                                                                         scrollDirection: self.scrollOptions.direction,
+                                                                                         preferences: preferences)
+                        DispatchQueue.main.async {
+                            self.alignmentGuides = alignmentGuides
+                            self.gridHeight = gridHeight
                         }
-                    })
-            }
+                    }
+                })
         }
         .frame(width: self.scrollOptions.direction == .horizontal ? gridHeight : nil,
                height: self.scrollOptions.direction == .vertical ? gridHeight : nil)
@@ -78,13 +76,13 @@ public struct WaterfallGrid<Data, ID, Content>: View where Data : RandomAccessCo
                 let height = heights[indexMin]
                 let offset = CGPoint(x: 0 - (scrollDirection == .vertical ? width : height),
                                      y: 0 - (scrollDirection == .vertical ? height : width))
-                heights[indexMin] += preferenceSizeHeight + spacing
+                heights[indexMin] += preferenceSizeHeight
                 alignmentGuides[preference.id] = offset
             }
         }
-        
+
         let gridHeight = max(0, (heights.max() ?? spacing) - spacing)
-        
+
         return (alignmentGuides, gridHeight)
     }
 
